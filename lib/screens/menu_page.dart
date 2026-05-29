@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'sales_platto.dart';
+import 'inventory_platto.dart';
 
 class PlattoMenuPage extends StatelessWidget {
   const PlattoMenuPage({super.key});
@@ -115,9 +116,14 @@ class PlattoMenuPage extends StatelessWidget {
                               builder: (context) => const SalesPlatto(),
                             ),
                           );
-                        } else {
-                          // Aquí puedes manejar las otras opciones más adelante
-                          print('Presionaste: ${item['title']}');
+                        } else if (item['title'] == 'INVENTARIO') {
+                          // <--- Asegúrate que coincida con el título en tu lista
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const InventoryPlatto(),
+                            ),
+                          );
                         }
                       },
                       borderRadius: BorderRadius.circular(18),
