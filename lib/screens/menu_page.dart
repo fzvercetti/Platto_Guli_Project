@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'sales_platto.dart';
 
 class PlattoMenuPage extends StatelessWidget {
   const PlattoMenuPage({super.key});
@@ -107,8 +108,17 @@ class PlattoMenuPage extends StatelessWidget {
                   children: menuItems.map((item) {
                     return InkWell(
                       onTap: () {
-                        // Aquí manejarás la navegación a cada pantalla más adelante
-                        print('Presionaste: ${item['title']}');
+                        if (item['title'] == 'VENTAS') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SalesPlatto(),
+                            ),
+                          );
+                        } else {
+                          // Aquí puedes manejar las otras opciones más adelante
+                          print('Presionaste: ${item['title']}');
+                        }
                       },
                       borderRadius: BorderRadius.circular(18),
                       child: Container(
