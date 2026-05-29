@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/fzb/platto_app/linux/runner",
-      "program": "/home/fzb/platto_app/linux/runner/build/Debug/outDebug",
+      "cwd": "/home/fzb/platto_app/frontend",
+      "program": "/home/fzb/platto_app/frontend/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
