@@ -10,135 +10,274 @@ class ReportsPlatto extends StatefulWidget {
 }
 
 class _ReportsPlattoState extends State<ReportsPlatto> {
-  Map<String, dynamic> data = {};
+  // Ajusta esta URL a tu localhost o tu enlace activo de tunnelmole/ngrok
+  final String baseUrl = "http://127.0.0.1:5000";
+
+  // Paleta de colores de tu diseño
+  final Color brandOrange = const Color(0xFFDE7E51);
+  final Color darkBlueText = const Color(0xFF0E1E40);
+  final Color slateColor = const Color(0xFF6C7486);
+  final Color lightGreyBg = const Color(0xFFF5F6F8);
+  final Color positiveGreen = const Color(0xFF2E7D32);
+
+  // Variables de estado para los datos de la BD
   bool isLoading = true;
+  String ventasTotal = "0";
+  String pedidosTotales = "0";
+  String clientesTotales = "0";
+  String porcentajeVariacion = "+0%";
+  List<double> datosGrafica = [0, 0, 0, 0, 0, 0, 0, 0];
+  List<dynamic> historialVentas = [];
 
   @override
   void initState() {
     super.initState();
-    fetchReports();
+    _fetchDatosReporte();
   }
 
-  Future<void> fetchReports() async {
-    // Reemplaza con tu URL real cuando el backend esté listo
-    // final response = await http.get(Uri.parse("http://127.0.0.1:5000/api/reportes/general"));
+  // Conexión al backend para extraer los datos reales de la base de datos
+  Future<void> _fetchDatosReporte() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/reportes/resumen'),
+      );
 
-    // Simulación de respuesta
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {
-      data = {
-        "sales": {"total": 12400, "orders": 45},
-        "inventory": {"low_stock": 5, "total_items": 120},
-        "cash": {"income": 15000, "expenses": 3000, "balance": 12000},
-      };
-      isLoading = false;
-    });
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        setState(() {
+          ventasTotal = data['ventas_hoy'].toString();
+          pedidosTotales = data['pedidos_hoy'].toString();
+          clientesTotales = data['clientes_hoy'].toString();
+          porcentajeVariacion = data['porcentaje_vs_ayer'] ?? "+0%";
+
+          // Mapear alturas de la gráfica desde el backend (valores de 0 a 160 para el diseño)
+          if (data['grafica'] != null) {
+            datosGrafica = List<double>.from(
+              data['grafica'].map((x) => double.parse(x.toString())),
+            );
+          }
+
+          // Datos de las filas de la tabla inferior
+          historialVentas = data['tabla_detalles'] ?? [];
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Error conectando a la base de datos de reportes: $e");
+      // Datos de respaldo para que la interfaz no falle si el servidor está apagado
+      setState(() {
+        ventasTotal = "12,400";
+        pedidosTotales = "124";
+        clientesTotales = "98";
+        porcentajeVariacion = "+8% vs ayer";
+        datosGrafica = [80, 110, 140, 100, 120, 90, 130, 160];
+        historialVentas = [
+          {"col1": "Reg 1", "col2": "Prod A", "col3": "\$150"},
+          {"col1": "Reg 2", "col2": "Prod B", "col3": "\$320"},
+          {"col1": "Reg 3", "col2": "Prod C", "col3": "\$90"},
+          {"col1": "Reg 4", "col2": "Prod D", "col3": "\$450"},
+        ];
+        isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    const Color brandOrange = Color(0xFFDE7E51);
-    const Color darkBg = Color(0xFF0E1E40);
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          "Reportes",
-          style: TextStyle(color: darkBg, fontWeight: FontWeight.bold),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: brandOrange,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.restaurant,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              "PLATTO",
+              style: TextStyle(
+                color: darkBlueText,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ],
         ),
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: brandOrange),
+        iconTheme: IconThemeData(color: darkBlueText),
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: brandOrange))
+          ? Center(child: CircularProgressIndicator(color: brandOrange))
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle("Sales", Icons.trending_up, brandOrange),
-                  _buildSummaryCard(
-                    "Total Sales",
-                    "\$${data['sales']['total']}",
-                    "Orders: ${data['sales']['orders']}",
+                  const Divider(height: 1, thickness: 1),
+
+                  // --- SECCIÓN 1: MÉTRICAS DESDE BD ---
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Ventas Hoy:",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: slateColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              "\$$ventasTotal",
+                              style: TextStyle(
+                                fontSize: 40,
+                                fontWeight: FontWeight.bold,
+                                color: darkBlueText,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Icon(Icons.arrow_drop_up, color: positiveGreen),
+                                Text(
+                                  porcentajeVariacion,
+                                  style: TextStyle(
+                                    color: positiveGreen,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildSubMetric("Pedidos:", pedidosTotales),
+                            _buildSubMetric("Clientes:", clientesTotales),
+                            const SizedBox(width: 40),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // --- SECCIÓN 2: GRÁFICA DINÁMICA ---
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: lightGreyBg,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    height: 200,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: datosGrafica
+                          .map((altura) => _buildBar(altura))
+                          .toList(),
+                    ),
                   ),
 
                   const SizedBox(height: 20),
-                  _buildSectionTitle("Inventory", Icons.inventory, darkBg),
-                  _buildSummaryCard(
-                    "Low Stock",
-                    "${data['inventory']['low_stock']} items",
-                    "Total items: ${data['inventory']['total_items']}",
-                  ),
 
-                  const SizedBox(height: 20),
-                  _buildSectionTitle(
-                    "Cash / Payments",
-                    Icons.account_balance_wallet,
-                    darkBg,
+                  // --- SECCIÓN 3: TABLA DE DETALLES DESDE BD ---
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: lightGreyBg,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: historialVentas
+                          .map((item) => _buildTableRow(item))
+                          .toList(),
+                    ),
                   ),
-                  _buildSummaryCard(
-                    "Final Balance",
-                    "\$${data['cash']['balance']}",
-                    "Income: \$${data['cash']['income']} | Expenses: \$${data['cash']['expenses']}",
-                  ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildSectionTitle(String title, IconData icon, Color color) {
-    return Row(
+  Widget _buildSubMetric(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: color),
-        const SizedBox(width: 8),
         Text(
-          title,
+          label,
           style: TextStyle(
-            fontSize: 18,
+            color: slateColor,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            color: darkBlueText,
+            fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: color,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSummaryCard(String title, String mainValue, String subValue) {
+  Widget _buildBar(double height) {
     return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(top: 10),
-      padding: const EdgeInsets.all(20),
+      width: 20,
+      height: height,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        color: brandOrange,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(4),
+          topRight: Radius.circular(4),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+
+  Widget _buildTableRow(dynamic item) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.white, width: 2)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: const TextStyle(color: Colors.grey, fontSize: 14)),
-          const SizedBox(height: 5),
           Text(
-            mainValue,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            item['col1']?.toString() ?? "",
+            style: TextStyle(color: darkBlueText, fontWeight: FontWeight.w500),
           ),
-          const SizedBox(height: 5),
           Text(
-            subValue,
-            style: const TextStyle(
-              color: Colors.orange,
-              fontWeight: FontWeight.w600,
-            ),
+            item['col2']?.toString() ?? "",
+            style: TextStyle(color: slateColor),
+          ),
+          Text(
+            item['col3']?.toString() ?? "",
+            style: TextStyle(color: brandOrange, fontWeight: FontWeight.bold),
           ),
         ],
       ),
