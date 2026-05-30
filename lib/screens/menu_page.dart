@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'sales_platto.dart';
 import 'inventory_platto.dart';
 import 'cash_management_platto.dart';
+import 'reports_platto.dart';
 
 class PlattoMenuPage extends StatelessWidget {
   const PlattoMenuPage({super.key});
@@ -110,6 +111,7 @@ class PlattoMenuPage extends StatelessWidget {
                   children: menuItems.map((item) {
                     return InkWell(
                       onTap: () {
+                        // --- AQUÍ ESTÁ TU LÓGICA INTEGRADA ---
                         if (item['title'] == 'VENTAS') {
                           Navigator.push(
                             context,
@@ -118,7 +120,6 @@ class PlattoMenuPage extends StatelessWidget {
                             ),
                           );
                         } else if (item['title'] == 'INVENTARIO') {
-                          // <--- Asegúrate que coincida con el título en tu lista
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -131,6 +132,13 @@ class PlattoMenuPage extends StatelessWidget {
                             MaterialPageRoute(
                               builder: (context) =>
                                   const CashManagementPlatto(),
+                            ),
+                          );
+                        } else if (item['title'] == 'REPORTES') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ReportsPlatto(),
                             ),
                           );
                         }
