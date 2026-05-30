@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'sales_platto.dart';
 import 'inventory_platto.dart';
+import 'cash_management_platto.dart';
 
 class PlattoMenuPage extends StatelessWidget {
   const PlattoMenuPage({super.key});
@@ -122,6 +123,14 @@ class PlattoMenuPage extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (context) => const InventoryPlatto(),
+                            ),
+                          );
+                        } else if (item['title'] == 'CAJA / PAGOS') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const CashManagementPlatto(),
                             ),
                           );
                         }

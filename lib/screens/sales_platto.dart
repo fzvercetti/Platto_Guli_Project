@@ -11,46 +11,82 @@ class SalesPlatto extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          "Ventas del Día",
-          style: TextStyle(color: darkText, fontWeight: FontWeight.bold),
-        ),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: brandOrange),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
           children: [
-            // Aquí irá la lista de ventas (cuando conectes el backend)
-            Expanded(
-              child: ListView.builder(
-                itemCount: 5, // Simulación de 5 ventas
-                itemBuilder: (context, index) {
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ListTile(
-                      leading: const Icon(
-                        Icons.receipt_long,
-                        color: brandOrange,
-                      ),
-                      title: Text(
-                        "Pedido #${100 + index}",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: const Text("Total: \$450.00"),
-                      trailing: const Text(
-                        "14:30",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  );
-                },
+            const SizedBox(height: 20),
+            // Logo y Título
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: brandOrange.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(16),
               ),
+              child: const Icon(Icons.restaurant, size: 50, color: brandOrange),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              "PLATTO",
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: darkText,
+              ),
+            ),
+            const Text(
+              "Control total del sabor",
+              style: TextStyle(color: Colors.grey),
+            ),
+
+            const SizedBox(height: 40),
+
+            // --- BOTONES DEL DASHBOARD ---
+            _buildMenuButton("Nuevo Pedido", Icons.add, () {
+              // Navegar a pantalla de Nueva Venta
+            }),
+            _buildMenuButton("Ver Ventas Del Día", Icons.receipt_long, () {
+              // Navegar a la lista de ventas (puedes reutilizar la lógica anterior)
+            }),
+            _buildMenuButton("Resumen Semanal/Mensual", Icons.trending_up, () {
+              // Navegar a reportes
+            }),
+            _buildMenuButton("Método de Pago", Icons.payment, () {
+              // Configuración de pagos
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget reutilizable para los botones grandes
+  Widget _buildMenuButton(String text, IconData icon, VoidCallback onTap) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      width: double.infinity,
+      height: 70,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFDE7E51),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 30),
+            const SizedBox(width: 20),
+            Text(
+              text,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],
         ),
