@@ -125,7 +125,7 @@ class PlattoMenuPage extends StatelessWidget {
                               builder: (context) => const InventoryPlatto(),
                             ),
                           );
-                        } else if (item['title'] == 'CAJA / PAGOS') {
+                        } else if (item['title'] == 'CAJA/PAGO') {
                           Navigator.push(
                             context,
                             MaterialPageRoute(

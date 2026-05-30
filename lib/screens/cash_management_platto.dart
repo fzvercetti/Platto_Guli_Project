@@ -12,7 +12,7 @@ class CashManagementPlatto extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
-          "Caja / Pagos",
+          "Caja/Pago",
           style: TextStyle(color: darkBg, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
