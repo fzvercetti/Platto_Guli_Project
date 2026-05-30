@@ -3,7 +3,8 @@ import mysql.connector
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+# --- AQUÍ ESTÁ EL CAMBIO: Permisos universales para que Flutter pueda entrar ---
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # --- CONEXIÓN A TU BASE DE DATOS LOCAL ---
 def conectar_db():
