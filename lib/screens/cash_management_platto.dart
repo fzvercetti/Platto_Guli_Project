@@ -1,8 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class CashManagementPlatto extends StatelessWidget {
+class CashManagementPlatto extends StatefulWidget {
   const CashManagementPlatto({super.key});
 
+  @override
+  State<CashManagementPlatto> createState() => _CashManagementPlattoState();
+}
+
+class _CashManagementPlattoState extends State<CashManagementPlatto> {
+  // Cambia esta URL por la IP de tu servidor si no es local
+  final String baseUrl = "http://127.0.0.1:5000";
+
+  // --- FUNCIÓN PARA ENVIAR DATOS (POST) ---
+  Future<void> registrarMovimiento(String tipo, double monto) async {
+    try {
+      final response = await http.post(
+        Uri.parse(
+          '$baseUrl/movimiento',
+        ), // Asegúrate de tener esta ruta en Flask
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "tipo": tipo, // "Ingreso" o "Egreso"
+          "monto": monto,
+          "fecha": DateTime.now().toIso8601String(),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("$tipo registrado correctamente")),
+        );
+      }
+    } catch (e) {
+      print("Error al conectar: $e");
+    }
+  }
+
+  // --- UI ---
   @override
   Widget build(BuildContext context) {
     const Color brandOrange = Color(0xFFDE7E51);
@@ -18,21 +55,11 @@ class CashManagementPlatto extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: brandOrange),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: darkBg),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.person, color: darkBg),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: GridView.count(
-          crossAxisCount: 2, // 2 columnas
+          crossAxisCount: 2,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
           children: [
@@ -40,25 +67,25 @@ class CashManagementPlatto extends StatelessWidget {
               "Registrar Ingreso",
               Icons.attach_money,
               brandOrange,
-              context,
+              () => _mostrarDialogo("Ingreso"),
             ),
             _buildActionCard(
               "Registrar Egreso",
               Icons.description,
               darkBg,
-              context,
+              () => _mostrarDialogo("Egreso"),
             ),
             _buildActionCard(
               "Conciliación automática",
               Icons.refresh,
               darkBg,
-              context,
+              () => print("Conciliando..."),
             ),
             _buildActionCard(
               "Flujo de efectivo",
               Icons.bar_chart,
               darkBg,
-              context,
+              () => print("Consultando flujo..."),
             ),
           ],
         ),
@@ -66,17 +93,44 @@ class CashManagementPlatto extends StatelessWidget {
     );
   }
 
+  // --- DIÁLOGO PARA CAPTURAR MONTO ---
+  void _mostrarDialogo(String tipo) {
+    TextEditingController controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Registrar $tipo"),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(hintText: "Ingresa el monto"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              registrarMovimiento(tipo, double.parse(controller.text));
+              Navigator.pop(context);
+            },
+            child: const Text("Guardar"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- WIDGET DE BOTÓN ---
   Widget _buildActionCard(
     String title,
     IconData icon,
     Color color,
-    BuildContext context,
+    VoidCallback onTap,
   ) {
     return GestureDetector(
-      onTap: () {
-        // Aquí agregarás la navegación a cada funcionalidad
-        print("Acción: $title");
-      },
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: color,
