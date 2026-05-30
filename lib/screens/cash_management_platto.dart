@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:intl/intl.dart'; // Asegúrate de tener intl en tu pubspec.yaml
+import 'conciliation_platto.dart';
 
 class CashManagementPlatto extends StatefulWidget {
   const CashManagementPlatto({super.key});
@@ -10,32 +12,48 @@ class CashManagementPlatto extends StatefulWidget {
 }
 
 class _CashManagementPlattoState extends State<CashManagementPlatto> {
-  // Cambia esta URL por la IP de tu servidor si no es local
+  // Cambia esta URL por la IP de tu servidor si no es local o tu enlace de túnel
   final String baseUrl = "http://127.0.0.1:5000";
 
   // --- FUNCIÓN PARA ENVIAR DATOS (POST) ---
-  Future<void> registrarMovimiento(String tipo, double monto) async {
+  // Ahora recibe también el concepto
+  Future<void> registrarMovimiento(
+    String tipo,
+    double monto,
+    String concepto,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse(
-          '$baseUrl/movimiento',
-        ), // Asegúrate de tener esta ruta en Flask
+          '$baseUrl/api/movimiento',
+        ), // Ajusta la ruta a tu API de Flask
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "tipo": tipo, // "Ingreso" o "Egreso"
           "monto": monto,
-          "fecha": DateTime.now().toIso8601String(),
+          "concepto": concepto, // Nuevo campo enviado a la base de datos
+          "fecha": DateTime.now().toIso8601String(), // Hora y fecha automática
         }),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("$tipo registrado correctamente")),
+          SnackBar(
+            content: Text("$tipo registrado correctamente"),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
       print("Error al conectar: $e");
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Error al conectar con el servidor"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -49,7 +67,7 @@ class _CashManagementPlattoState extends State<CashManagementPlatto> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
-          "Caja/Pago",
+          "Caja / Pagos",
           style: TextStyle(color: darkBg, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
@@ -79,7 +97,14 @@ class _CashManagementPlattoState extends State<CashManagementPlatto> {
               "Conciliación automática",
               Icons.refresh,
               darkBg,
-              () => print("Conciliando..."),
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ConciliationPlatto(),
+                  ),
+                );
+              },
             ),
             _buildActionCard(
               "Flujo de efectivo",
@@ -93,29 +118,108 @@ class _CashManagementPlattoState extends State<CashManagementPlatto> {
     );
   }
 
-  // --- DIÁLOGO PARA CAPTURAR MONTO ---
+  // --- DIÁLOGO PARA CAPTURAR MONTO Y CONCEPTO ---
   void _mostrarDialogo(String tipo) {
-    TextEditingController controller = TextEditingController();
+    TextEditingController montoController = TextEditingController();
+    TextEditingController conceptoController = TextEditingController();
+
+    // Generamos un texto amigable para mostrar la fecha/hora automática en la UI
+    String fechaFormateada = DateFormat(
+      'dd/MM/yyyy HH:mm',
+    ).format(DateTime.now());
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Registrar $tipo"),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(hintText: "Ingresa el monto"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          "Registrar $tipo",
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min, // Evita que ocupe toda la pantalla
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Campo de Monto
+            TextField(
+              controller: montoController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: InputDecoration(
+                labelText: "Cantidad / Monto",
+                prefixIcon: const Icon(Icons.attach_money),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Campo de Concepto
+            TextField(
+              controller: conceptoController,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                labelText: "Concepto",
+                hintText: tipo == "Ingreso"
+                    ? "Ej. Venta externa, Propina"
+                    : "Ej. Pago a proveedor, Luz",
+                prefixIcon: const Icon(Icons.edit_note),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Indicador visual de la fecha automática
+            Row(
+              children: [
+                const Icon(Icons.access_time, size: 18, color: Colors.grey),
+                const SizedBox(width: 8),
+                Text(
+                  "Fecha y hora: $fechaFormateada\n(Se registrará automáticamente)",
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ],
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar"),
+            child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: tipo == "Ingreso"
+                  ? const Color(0xFFDE7E51)
+                  : const Color(0xFF0E1E40),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             onPressed: () {
-              registrarMovimiento(tipo, double.parse(controller.text));
+              // Validar que no envíen campos vacíos
+              if (montoController.text.isEmpty ||
+                  conceptoController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Por favor llena todos los campos"),
+                  ),
+                );
+                return;
+              }
+
+              registrarMovimiento(
+                tipo,
+                double.parse(montoController.text),
+                conceptoController.text,
+              );
               Navigator.pop(context);
             },
-            child: const Text("Guardar"),
+            child: const Text("Guardar", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -135,19 +239,29 @@ class _CashManagementPlattoState extends State<CashManagementPlatto> {
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 5,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 40, color: Colors.white),
             const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ),
           ],
