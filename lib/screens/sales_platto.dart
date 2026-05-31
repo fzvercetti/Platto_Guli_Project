@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'new_order_platto.dart';
 import 'daily_sales_page.dart';
-import 'summary_page.dart';
 
 const Color orangeColor = Color(0xFFE98A5C);
 
@@ -19,23 +18,17 @@ class SalesPlatto extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: dynamicBg,
-      // --- AQUÍ AÑADIMOS EL APPBAR PARA EL BOTÓN DE REGRESO ---
       appBar: AppBar(
         backgroundColor: dynamicBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: orangeColor),
-          onPressed: () =>
-              Navigator.pop(context), // Esto regresa a la pantalla anterior
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-      // --------------------------------------------------------
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 24.0,
-            vertical: 20.0,
-          ), // Ajusté un poco el padding vertical
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -75,6 +68,7 @@ class SalesPlatto extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 70),
+              // Botón Nuevo Pedido
               _buildMenuButton(Icons.add, "Nuevo Pedido", dynamicText, () {
                 Navigator.push(
                   context,
@@ -84,6 +78,7 @@ class SalesPlatto extends StatelessWidget {
                 );
               }),
               const SizedBox(height: 20),
+              // Botón Ventas del Día
               _buildMenuButton(
                 Icons.assignment_outlined,
                 "Ver Ventas Del Día",
@@ -91,22 +86,13 @@ class SalesPlatto extends StatelessWidget {
                 () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => DailySalesPage()),
+                    MaterialPageRoute(
+                      builder: (context) => const DailySalesPage(),
+                    ),
                   );
                 },
               ),
-              const SizedBox(height: 20),
-              _buildMenuButton(
-                Icons.trending_up,
-                "Resumen Semanal/Mensual",
-                dynamicText,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SummaryPage()),
-                  );
-                },
-              ),
+              // El botón de Resumen ha sido eliminado
             ],
           ),
         ),
