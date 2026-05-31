@@ -17,6 +17,7 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
   double totalIncome = 0.0;
   double totalExpenses = 0.0;
   double expectedBalance = 0.0;
+  double currentDifference = 0.0; // Nueva variable para calcular la diferencia
 
   final TextEditingController cashController = TextEditingController();
   final TextEditingController cardsController = TextEditingController();
@@ -25,6 +26,27 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
   void initState() {
     super.initState();
     _fetchSystemSummary();
+
+    // Escuchar cambios en los campos de texto para calcular en tiempo real
+    cashController.addListener(_calculateDifference);
+    cardsController.addListener(_calculateDifference);
+  }
+
+  @override
+  void dispose() {
+    cashController.dispose();
+    cardsController.dispose();
+    super.dispose();
+  }
+
+  // --- CÁLCULO EN TIEMPO REAL ---
+  void _calculateDifference() {
+    double physicalCash = double.tryParse(cashController.text) ?? 0.0;
+    double physicalCards = double.tryParse(cardsController.text) ?? 0.0;
+
+    setState(() {
+      currentDifference = (physicalCash + physicalCards) - expectedBalance;
+    });
   }
 
   // --- CONNECT TO DATABASE (FETCH SUMMARY) ---
@@ -43,10 +65,10 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
           expectedBalance = initialBalance + totalIncome - totalExpenses;
           isLoading = false;
         });
+        _calculateDifference(); // Calcular inicial
       }
     } catch (e) {
       print("Error fetching summary: $e");
-      // Mock data for UI preview
       setState(() {
         initialBalance = 500.00;
         totalIncome = 3500.00;
@@ -54,6 +76,7 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
         expectedBalance = 3800.00;
         isLoading = false;
       });
+      _calculateDifference();
     }
   }
 
@@ -74,6 +97,8 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
           "physical_cash": double.parse(cashController.text),
           "physical_cards": double.parse(cardsController.text),
           "expected_balance": expectedBalance,
+          "difference":
+              currentDifference, // Enviamos también la diferencia a la BD
           "timestamp": DateTime.now().toIso8601String(),
         }),
       );
@@ -82,7 +107,7 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Conciliation saved successfully"),
+            content: Text("Shift closed successfully"),
             backgroundColor: Colors.green,
           ),
         );
@@ -99,13 +124,27 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
     const Color bgGrey = Color(0xFFF7F9FA);
     const Color textDark = Color(0xFF2D3748);
     const Color textGrey = Color(0xFF718096);
+    const Color brandOrange = Color(0xFFDE7E51); // Naranja del botón
+
+    // Lógica para colores de la diferencia
+    Color diffColor = currentDifference == 0
+        ? Colors.green
+        : const Color(0xFFE53E3E); // Rojo si hay diferencia
+
+    Color diffBgColor = currentDifference == 0
+        ? Colors.green.shade50
+        : const Color(0xFFFFF5F5); // Rojo clarito de fondo
+
+    String diffText = "Exact match";
+    if (currentDifference > 0) diffText = "Diferencia detectada: Sobrante";
+    if (currentDifference < 0) diffText = "Diferencia detectada: Faltante";
 
     return Scaffold(
       backgroundColor: bgGrey,
       appBar: AppBar(
         backgroundColor: appBarColor,
         title: const Text(
-          "Detalles de Corte Automatizado",
+          "Detalle de Corte Automatizado",
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w600,
@@ -134,7 +173,7 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          "Resumen del Sistema",
+                          "Resumen de Sistema",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -143,21 +182,21 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
                         ),
                         const SizedBox(height: 24),
                         _buildSummaryRow(
-                          "Balance inicial:",
+                          "Balance Inicial:",
                           "\$${initialBalance.toStringAsFixed(2)}",
                           labelColor: textGrey,
                           valueColor: textGrey,
                         ),
                         const SizedBox(height: 12),
                         _buildSummaryRow(
-                          "Total de Ingreso:",
+                          "Total de Ingresos:",
                           "+\$${totalIncome.toStringAsFixed(2)}",
                           labelColor: textGrey,
                           valueColor: const Color(0xFF38A169),
                         ),
                         const SizedBox(height: 12),
                         _buildSummaryRow(
-                          "Total de Egresos:",
+                          "Total de Gastos:",
                           "-\$${totalExpenses.toStringAsFixed(2)}",
                           labelColor: textGrey,
                           valueColor: const Color(0xFFE53E3E),
@@ -167,7 +206,7 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
                           child: Divider(thickness: 1),
                         ),
                         _buildSummaryRow(
-                          "Total de dinero esperado:",
+                          "Balance Esperado:",
                           "\$${expectedBalance.toStringAsFixed(2)}",
                           labelColor: textDark,
                           valueColor: textDark,
@@ -192,7 +231,7 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          "Corte Fisico",
+                          "Ingreso Físico",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -202,7 +241,7 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
                         const SizedBox(height: 24),
 
                         const Text(
-                          "Total en efectivo",
+                          "Ingresos en efectivo",
                           style: TextStyle(
                             color: textDark,
                             fontWeight: FontWeight.w500,
@@ -214,7 +253,7 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
                         const SizedBox(height: 20),
 
                         const Text(
-                          "Pagos con tarjeta",
+                          "Ingresos con tarjeta",
                           style: TextStyle(
                             color: textDark,
                             fontWeight: FontWeight.w500,
@@ -223,25 +262,97 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
                         const SizedBox(height: 8),
                         _buildInputField(cardsController, "e.g. 50.00"),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
 
+                        // --- SECCIÓN DE DIFERENCIA (NUEVO) ---
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: diffBgColor,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: diffColor.withOpacity(0.5),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Diferencia",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: textDark,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                "\$ ${currentDifference.abs().toStringAsFixed(2)}",
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: diffColor,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      currentDifference == 0
+                                          ? Icons.check_circle_outline
+                                          : Icons.warning_amber_rounded,
+                                      color: diffColor,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      diffText,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // --- BOTÓN CERRAR TURNO (NUEVO) ---
                         SizedBox(
                           width: double.infinity,
-                          height: 50,
+                          height: 55,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: appBarColor,
+                              backgroundColor: brandOrange,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                             onPressed: _saveConciliation,
                             child: const Text(
-                              "CONFIRMAR CORTE",
+                              "CERRAR TURNO Y GUARDAR",
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
                               ),
                             ),
                           ),
@@ -249,6 +360,7 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 30),
                 ],
               ),
             ),
