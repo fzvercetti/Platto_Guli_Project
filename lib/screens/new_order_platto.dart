@@ -100,7 +100,6 @@ class _NewOrderPlattoState extends State<NewOrderPlatto> {
               items: [
                 "Efectivo",
                 "Tarjeta",
-                "Transferencia",
               ].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
               onChanged: (val) => setState(() => _metodoPago = val!),
             ),
