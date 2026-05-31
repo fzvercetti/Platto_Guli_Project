@@ -32,7 +32,7 @@ class _NewOrderPlattoState extends State<NewOrderPlatto> {
     try {
       // Intentamos conectar a Flask. Le damos 5 segundos de espera máximo.
       final response = await http
-          .get(Uri.parse('http://10.0.2.2:5000/api/productos'))
+          .get(Uri.parse('http://localhost:5000/api/productos'))
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {

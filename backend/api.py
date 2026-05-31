@@ -22,14 +22,21 @@ def obtener_productos():
     try:
         conexion = conectar_db()
         cursor = conexion.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM productos")
+        # 🔁 Usa alias para que coincidan con lo que espera Flutter
+        cursor.execute("""
+            SELECT 
+                id_producto AS id, 
+                nombre,               -- Asegúrate que en tu BD la columna se llama "nombre"
+                precio_unitario AS precio
+            FROM productos
+        """)
         productos = cursor.fetchall()
         cursor.close()
         conexion.close()
-        return jsonify(productos) if productos else jsonify([])
+        return jsonify(productos)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+    
 # --- 2. OBTENER VENTAS ---
 @app.route('/ventas', methods=['GET'])
 def obtener_ventas():
