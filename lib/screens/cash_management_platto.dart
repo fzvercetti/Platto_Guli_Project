@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:intl/intl.dart'; // Asegúrate de tener intl en tu pubspec.yaml
+import 'package:intl/intl.dart';
 import 'conciliation_platto.dart';
 import 'cash_flow_platto.dart';
 
@@ -13,11 +13,8 @@ class CashManagementPlatto extends StatefulWidget {
 }
 
 class _CashManagementPlattoState extends State<CashManagementPlatto> {
-  // Cambia esta URL por la IP de tu servidor si no es local o tu enlace de túnel
   final String baseUrl = "http://127.0.0.1:5000";
 
-  // --- FUNCIÓN PARA ENVIAR DATOS (POST) ---
-  // Ahora recibe también el concepto
   Future<void> registrarMovimiento(
     String tipo,
     double monto,
@@ -25,15 +22,13 @@ class _CashManagementPlattoState extends State<CashManagementPlatto> {
   ) async {
     try {
       final response = await http.post(
-        Uri.parse(
-          '$baseUrl/api/movimiento',
-        ), // Ajusta la ruta a tu API de Flask
+        Uri.parse('$baseUrl/api/movimiento'),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
-          "tipo": tipo, // "Ingreso" o "Egreso"
+          "tipo": tipo,
           "monto": monto,
-          "concepto": concepto, // Nuevo campo enviado a la base de datos
-          "fecha": DateTime.now().toIso8601String(), // Hora y fecha automática
+          "concepto": concepto,
+          "fecha": DateTime.now().toIso8601String(),
         }),
       );
 
@@ -47,7 +42,6 @@ class _CashManagementPlattoState extends State<CashManagementPlatto> {
         );
       }
     } catch (e) {
-      print("Error al conectar: $e");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -58,20 +52,26 @@ class _CashManagementPlattoState extends State<CashManagementPlatto> {
     }
   }
 
-  // --- UI ---
   @override
   Widget build(BuildContext context) {
+    // 1. Detectar tema para colores dinámicos
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    // Colores de marca
     const Color brandOrange = Color(0xFFDE7E51);
     const Color darkBg = Color(0xFF0E1E40);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Caja / Pagos",
-          style: TextStyle(color: darkBg, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : darkBg,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: brandOrange),
       ),
@@ -119,15 +119,18 @@ class _CashManagementPlattoState extends State<CashManagementPlatto> {
     );
   }
 
-  // --- DIÁLOGO PARA CAPTURAR MONTO Y CONCEPTO ---
   void _mostrarDialogo(String tipo) {
     TextEditingController montoController = TextEditingController();
     TextEditingController conceptoController = TextEditingController();
 
-    // Generamos un texto amigable para mostrar la fecha/hora automática en la UI
-    String fechaFormateada = DateFormat(
-      'dd/MM/yyyy HH:mm',
-    ).format(DateTime.now());
+    // Para que los inputs del diálogo se vean bien en modo oscuro
+    final inputDecoration = InputDecoration(
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      filled: true,
+      fillColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey[800]
+          : Colors.grey[50],
+    );
 
     showDialog(
       context: context,
@@ -138,87 +141,53 @@ class _CashManagementPlattoState extends State<CashManagementPlatto> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         content: Column(
-          mainAxisSize: MainAxisSize.min, // Evita que ocupe toda la pantalla
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Campo de Monto
             TextField(
               controller: montoController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: InputDecoration(
+              decoration: inputDecoration.copyWith(
                 labelText: "Cantidad / Monto",
                 prefixIcon: const Icon(Icons.attach_money),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
               ),
             ),
             const SizedBox(height: 16),
-
-            // Campo de Concepto
             TextField(
               controller: conceptoController,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: InputDecoration(
+              decoration: inputDecoration.copyWith(
                 labelText: "Concepto",
                 hintText: tipo == "Ingreso"
-                    ? "Ej. Venta externa, Propina"
-                    : "Ej. Pago a proveedor, Luz",
+                    ? "Ej. Venta, Propina"
+                    : "Ej. Proveedor, Luz",
                 prefixIcon: const Icon(Icons.edit_note),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // Indicador visual de la fecha automática
-            Row(
-              children: [
-                const Icon(Icons.access_time, size: 18, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text(
-                  "Fecha y hora: $fechaFormateada\n(Se registrará automáticamente)",
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-              ],
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
+            child: const Text("Cancelar"),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: tipo == "Ingreso"
                   ? const Color(0xFFDE7E51)
                   : const Color(0xFF0E1E40),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
             ),
             onPressed: () {
-              // Validar que no envíen campos vacíos
-              if (montoController.text.isEmpty ||
-                  conceptoController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Por favor llena todos los campos"),
-                  ),
+              if (montoController.text.isNotEmpty &&
+                  conceptoController.text.isNotEmpty) {
+                registrarMovimiento(
+                  tipo,
+                  double.parse(montoController.text),
+                  conceptoController.text,
                 );
-                return;
+                Navigator.pop(context);
               }
-
-              registrarMovimiento(
-                tipo,
-                double.parse(montoController.text),
-                conceptoController.text,
-              );
-              Navigator.pop(context);
             },
             child: const Text("Guardar", style: TextStyle(color: Colors.white)),
           ),
@@ -227,7 +196,6 @@ class _CashManagementPlattoState extends State<CashManagementPlatto> {
     );
   }
 
-  // --- WIDGET DE BOTÓN ---
   Widget _buildActionCard(
     String title,
     IconData icon,

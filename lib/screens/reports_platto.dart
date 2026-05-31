@@ -1,6 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class ReportsPlatto extends StatefulWidget {
   const ReportsPlatto({super.key});
@@ -10,17 +10,10 @@ class ReportsPlatto extends StatefulWidget {
 }
 
 class _ReportsPlattoState extends State<ReportsPlatto> {
-  // Ajusta esta URL a tu localhost o tu enlace activo de tunnelmole/ngrok
   final String baseUrl = "http://127.0.0.1:5000";
-
-  // Paleta de colores de tu diseño
   final Color brandOrange = const Color(0xFFDE7E51);
-  final Color darkBlueText = const Color(0xFF0E1E40);
-  final Color slateColor = const Color(0xFF6C7486);
-  final Color lightGreyBg = const Color(0xFFF5F6F8);
   final Color positiveGreen = const Color(0xFF2E7D32);
 
-  // Variables de estado para los datos de la BD
   bool isLoading = true;
   String ventasTotal = "0";
   String pedidosTotales = "0";
@@ -35,13 +28,11 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
     _fetchDatosReporte();
   }
 
-  // Conexión al backend para extraer los datos reales de la base de datos
   Future<void> _fetchDatosReporte() async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/reportes/resumen'),
       );
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         setState(() {
@@ -49,22 +40,16 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
           pedidosTotales = data['pedidos_hoy'].toString();
           clientesTotales = data['clientes_hoy'].toString();
           porcentajeVariacion = data['porcentaje_vs_ayer'] ?? "+0%";
-
-          // Mapear alturas de la gráfica desde el backend (valores de 0 a 160 para el diseño)
           if (data['grafica'] != null) {
             datosGrafica = List<double>.from(
               data['grafica'].map((x) => double.parse(x.toString())),
             );
           }
-
-          // Datos de las filas de la tabla inferior
           historialVentas = data['tabla_detalles'] ?? [];
           isLoading = false;
         });
       }
     } catch (e) {
-      print("Error conectando a la base de datos de reportes: $e");
-      // Datos de respaldo para que la interfaz no falle si el servidor está apagado
       setState(() {
         ventasTotal = "12,400";
         pedidosTotales = "124";
@@ -73,9 +58,6 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
         datosGrafica = [80, 110, 140, 100, 120, 90, 130, 160];
         historialVentas = [
           {"col1": "Reg 1", "col2": "Prod A", "col3": "\$150"},
-          {"col1": "Reg 2", "col2": "Prod B", "col3": "\$320"},
-          {"col1": "Reg 3", "col2": "Prod C", "col3": "\$90"},
-          {"col1": "Reg 4", "col2": "Prod D", "col3": "\$450"},
         ];
         isLoading = false;
       });
@@ -84,8 +66,15 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final Color textColor = isDarkMode ? Colors.white : const Color(0xFF0E1E40);
+    final Color secondaryTextColor = isDarkMode
+        ? Colors.white70
+        : const Color(0xFF6C7486);
+    final Color cardBg = Theme.of(context).cardColor;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Row(
           children: [
@@ -105,16 +94,16 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
             Text(
               "PLATTO",
               style: TextStyle(
-                color: darkBlueText,
+                color: textColor,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
               ),
             ),
           ],
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
-        iconTheme: IconThemeData(color: darkBlueText),
+        iconTheme: IconThemeData(color: textColor),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator(color: brandOrange))
@@ -123,8 +112,6 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Divider(height: 1, thickness: 1),
-
-                  // --- SECCIÓN 1: MÉTRICAS DESDE BD ---
                   Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Column(
@@ -134,7 +121,7 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
                           "Ventas Hoy:",
                           style: TextStyle(
                             fontSize: 16,
-                            color: slateColor,
+                            color: secondaryTextColor,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -148,7 +135,7 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
                               style: TextStyle(
                                 fontSize: 40,
                                 fontWeight: FontWeight.bold,
-                                color: darkBlueText,
+                                color: textColor,
                               ),
                             ),
                             Row(
@@ -156,8 +143,8 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
                                 Icon(Icons.arrow_drop_up, color: positiveGreen),
                                 Text(
                                   porcentajeVariacion,
-                                  style: TextStyle(
-                                    color: positiveGreen,
+                                  style: const TextStyle(
+                                    color: Colors.green,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                   ),
@@ -168,23 +155,30 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
                         ),
                         const SizedBox(height: 20),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _buildSubMetric("Pedidos:", pedidosTotales),
-                            _buildSubMetric("Clientes:", clientesTotales),
+                            _buildSubMetric(
+                              "Pedidos:",
+                              pedidosTotales,
+                              textColor,
+                              secondaryTextColor,
+                            ),
                             const SizedBox(width: 40),
+                            _buildSubMetric(
+                              "Clientes:",
+                              clientesTotales,
+                              textColor,
+                              secondaryTextColor,
+                            ),
                           ],
                         ),
                       ],
                     ),
                   ),
-
-                  // --- SECCIÓN 2: GRÁFICA DINÁMICA ---
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: lightGreyBg,
+                      color: cardBg,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     height: 200,
@@ -196,19 +190,22 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
                           .toList(),
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
-                  // --- SECCIÓN 3: TABLA DE DETALLES DESDE BD ---
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
                     decoration: BoxDecoration(
-                      color: lightGreyBg,
+                      color: cardBg,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
                       children: historialVentas
-                          .map((item) => _buildTableRow(item))
+                          .map(
+                            (item) => _buildTableRow(
+                              item,
+                              textColor,
+                              secondaryTextColor,
+                            ),
+                          )
                           .toList(),
                     ),
                   ),
@@ -219,14 +216,19 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
     );
   }
 
-  Widget _buildSubMetric(String label, String value) {
+  Widget _buildSubMetric(
+    String label,
+    String value,
+    Color textColor,
+    Color secondaryColor,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: TextStyle(
-            color: slateColor,
+            color: secondaryColor,
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
@@ -235,7 +237,7 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
         Text(
           value,
           style: TextStyle(
-            color: darkBlueText,
+            color: textColor,
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -258,22 +260,24 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
     );
   }
 
-  Widget _buildTableRow(dynamic item) {
+  Widget _buildTableRow(dynamic item, Color textColor, Color secondaryColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.white, width: 2)),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             item['col1']?.toString() ?? "",
-            style: TextStyle(color: darkBlueText, fontWeight: FontWeight.w500),
+            style: TextStyle(color: textColor, fontWeight: FontWeight.w500),
           ),
           Text(
             item['col2']?.toString() ?? "",
-            style: TextStyle(color: slateColor),
+            style: TextStyle(color: secondaryColor),
           ),
           Text(
             item['col3']?.toString() ?? "",

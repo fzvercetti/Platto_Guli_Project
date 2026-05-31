@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
+import 'package:open_filex/open_filex.dart';
 
 class CashFlowPlatto extends StatefulWidget {
   const CashFlowPlatto({super.key});
@@ -13,9 +15,7 @@ class CashFlowPlatto extends StatefulWidget {
 }
 
 class _CashFlowPlattoState extends State<CashFlowPlatto> {
-  // Configuración de red (Ajustar IP según dispositivo)
   final String baseUrl = "http://10.0.2.2:5000";
-
   bool isLoading = true;
   double netBalance = 0.0;
   double totalIncome = 0.0;
@@ -25,124 +25,251 @@ class _CashFlowPlattoState extends State<CashFlowPlatto> {
   @override
   void initState() {
     super.initState();
-    //Load Static Data Firts
-    _loadStaticData();
-
     _fetchCashFlow();
   }
 
-  // --- Lógica: Conexión a BD con respaldo estático ---
-  Future<void> _fetchCashFlow() async {
-    try {
-      // Un timeout más corto para que falle rápido si no hay servidor
-      final response = await http
-          .get(Uri.parse("$baseUrl/api/cash/flow"))
-          .timeout(const Duration(seconds: 2));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        // Solo actualizamos si el widget sigue vivo
-        if (!mounted) return;
-
-        setState(() {
-          movements = List<Map<String, dynamic>>.from(data['movements']);
-          netBalance = data['net_balance'].toDouble();
-          totalIncome = data['total_income'].toDouble();
-          totalExpenses = data['total_expenses'].toDouble();
-          // isLoading ya es false porque _loadStaticData ya lo puso así
-        });
-      }
-    } catch (e) {
-      // Si falla, no hacemos nada, dejamos los datos estáticos que ya cargaron
-      debugPrint("Servidor no disponible, manteniendo datos estáticos.");
-    }
-  }
+  // --- LÓGICA DE DATOS Y CONEXIÓN ---
 
   void _loadStaticData() {
     setState(() {
-      netBalance = 2500.00;
-      totalIncome = 2820.00;
-      totalExpenses = 320.00;
+      netBalance = 2450.75;
+      totalIncome = 5100.00;
+      totalExpenses = 2649.25;
       movements = [
         {
-          "description": "Venta - Mesa 7",
-          "time": "09:30",
-          "payment_method": "Efectivo",
-          "amount": 650.00,
+          "description": "Venta Hamburguesa Clásica",
           "type": "income",
-        },
-        {
-          "description": "Venta - Mesa 3",
-          "time": "10:15",
+          "amount": 150.0,
+          "time": "10:30 AM",
           "payment_method": "Tarjeta",
-          "amount": 420.00,
-          "type": "income",
         },
         {
-          "description": "Compra Verduras",
-          "time": "11:00",
-          "payment_method": "Efectivo",
-          "amount": 120.00,
+          "description": "Compra Insumos (Lechuga)",
           "type": "expense",
-        },
-        {
-          "description": "Venta - Mesa 2",
-          "time": "14:20",
-          "payment_method": "Tarjeta",
-          "amount": 390.00,
-          "type": "income",
-        },
-        {
-          "description": "Venta - Mesa 8",
-          "time": "15:00",
+          "amount": 450.0,
+          "time": "11:15 AM",
           "payment_method": "Efectivo",
-          "amount": 780.00,
+        },
+        {
+          "description": "Venta Especial del Día",
           "type": "income",
+          "amount": 320.0,
+          "time": "13:00 PM",
+          "payment_method": "Tarjeta",
+        },
+        {
+          "description": "Pago Servicio Gas",
+          "type": "expense",
+          "amount": 1200.0,
+          "time": "15:45 PM",
+          "payment_method": "Transferencia",
         },
       ];
       isLoading = false;
     });
   }
 
-  // --- Lógica: Generación de PDF ---
+  Future<void> _fetchCashFlow() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl/api/cashflow'))
+          .timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        setState(() {
+          netBalance = double.tryParse(data['neto']?.toString() ?? '0') ?? 0.0;
+          totalIncome =
+              double.tryParse(data['ingresos']?.toString() ?? '0') ?? 0.0;
+          totalExpenses =
+              double.tryParse(data['egresos']?.toString() ?? '0') ?? 0.0;
+          movements = List<Map<String, dynamic>>.from(
+            data['movimientos'] ?? [],
+          );
+          isLoading = false;
+        });
+      } else {
+        _loadStaticData();
+      }
+    } catch (e) {
+      _loadStaticData();
+    }
+  }
+
+  // --- GENERACIÓN DE PDF (ESTILO CONTADOR) ---
+
   Future<void> _generatePdf() async {
     final pdf = pw.Document();
 
     pdf.addPage(
       pw.Page(
-        build: (pw.Context context) => pw.Column(
-          children: [
-            pw.Header(level: 0, child: pw.Text("Reporte de Flujo de Efectivo")),
-            pw.Table.fromTextArray(
-              context: context,
-              data: <List<String>>[
-                ['Concepto', 'Hora', 'Metodo', 'Monto'],
-                ...movements.map(
-                  (m) => [
-                    m['description'],
-                    m['time'],
-                    m['payment_method'],
-                    "${m['type'] == 'income' ? '+' : '-'}\$${m['amount']}",
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Header
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                    "PLATTO - REPORTE DE CAJA",
+                    style: pw.TextStyle(
+                      fontSize: 20,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.Text(
+                    "Fecha: ${DateTime.now().toString().split('.')[0]}",
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+              pw.Divider(),
+              pw.SizedBox(height: 10),
+
+              // Resumen financiero estilizado
+              pw.Container(
+                padding: const pw.EdgeInsets.all(10),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.grey200,
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(5),
+                  ),
+                ),
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+                  children: [
+                    pw.Text(
+                      "Ingresos: \$${totalIncome.toStringAsFixed(2)}",
+                      style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.green900,
+                      ),
+                    ),
+                    pw.Text(
+                      "Egresos: \$${totalExpenses.toStringAsFixed(2)}",
+                      style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.red900,
+                      ),
+                    ),
+                    pw.Text(
+                      "Balance: \$${netBalance.toStringAsFixed(2)}",
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+              pw.SizedBox(height: 20),
+
+              // Tabla detallada
+              pw.Text(
+                "Detalle de Transacciones",
+                style: pw.TextStyle(
+                  fontSize: 14,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.SizedBox(height: 10),
+              pw.Table(
+                border: pw.TableBorder.all(color: PdfColors.grey300),
+                columnWidths: const {
+                  0: pw.FlexColumnWidth(3),
+                  1: pw.FlexColumnWidth(1),
+                  2: pw.FlexColumnWidth(1),
+                  3: pw.FlexColumnWidth(1),
+                },
+                children: [
+                  pw.TableRow(
+                    decoration: const pw.BoxDecoration(
+                      color: PdfColors.grey300,
+                    ),
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(5),
+                        child: pw.Text(
+                          "Descripción",
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(5),
+                        child: pw.Text("Tipo"),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(5),
+                        child: pw.Text("Método"),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(5),
+                        child: pw.Text("Monto"),
+                      ),
+                    ],
+                  ),
+                  ...movements.map((item) {
+                    return pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(5),
+                          child: pw.Text(item['description']),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(5),
+                          child: pw.Text(
+                            item['type'] == 'income' ? 'Ingreso' : 'Egreso',
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(5),
+                          child: pw.Text(item['payment_method']),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(5),
+                          child: pw.Text(
+                            "\$${item['amount'].toStringAsFixed(2)}",
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
 
-    // Esta opción abre el menú de compartir del sistema (permite guardar en archivos)
-    await Printing.sharePdf(
-      bytes: await pdf.save(),
-      filename: 'reporte_flujo_efectivo.pdf',
-    );
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final String path =
+          "${directory.path}/Reporte_Platto_${DateTime.now().millisecondsSinceEpoch}.pdf";
+      final file = File(path);
+      await file.writeAsBytes(await pdf.save());
+
+      final result = await OpenFilex.open(path);
+      if (result.type != ResultType.done) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("PDF guardado correctamente")),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+      );
+    }
   }
+
+  // --- INTERFAZ UI ---
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6F8),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           "Detalle de Flujo de Efectivo",
@@ -154,7 +281,6 @@ class _CashFlowPlattoState extends State<CashFlowPlatto> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // Header
                 Container(
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(20),
@@ -193,7 +319,6 @@ class _CashFlowPlattoState extends State<CashFlowPlatto> {
                     ],
                   ),
                 ),
-                // Lista
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -203,9 +328,8 @@ class _CashFlowPlattoState extends State<CashFlowPlatto> {
                       bool isIncome = item['type'] == 'income';
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: ListTile(
@@ -217,10 +341,18 @@ class _CashFlowPlattoState extends State<CashFlowPlatto> {
                           ),
                           title: Text(
                             item['description'],
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isDarkMode ? Colors.white : Colors.black87,
+                            ),
                           ),
                           subtitle: Text(
                             "${item['time']} • ${item['payment_method']}",
+                            style: TextStyle(
+                              color: isDarkMode
+                                  ? Colors.white70
+                                  : Colors.black54,
+                            ),
                           ),
                           trailing: Text(
                             "${isIncome ? '+' : '-'}\$${item['amount'].toStringAsFixed(2)}",
@@ -234,7 +366,6 @@ class _CashFlowPlattoState extends State<CashFlowPlatto> {
                     },
                   ),
                 ),
-                // Botón PDF
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: SizedBox(
@@ -246,7 +377,7 @@ class _CashFlowPlattoState extends State<CashFlowPlatto> {
                       ),
                       onPressed: _generatePdf,
                       child: const Text(
-                        "GENERAR REPORTE PDF",
+                        "GUARDAR Y ABRIR PDF",
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

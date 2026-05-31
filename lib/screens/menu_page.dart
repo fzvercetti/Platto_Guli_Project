@@ -3,18 +3,28 @@ import 'sales_platto.dart';
 import 'inventory_platto.dart';
 import 'cash_management_platto.dart';
 import 'reports_platto.dart';
+import 'settings_screen.dart';
 
 class PlattoMenuPage extends StatelessWidget {
   const PlattoMenuPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Paleta de colores extraída de tu diseño
+    // Detectamos si estamos en modo oscuro
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    // Paleta de marca (Estos se mantienen igual porque son los colores de tu logo/botones)
     const Color orangeColor = Color(0xFFDE7E51);
     const Color slateColor = Color(0xFF6C7486);
-    const Color darkBlueText = Color(0xFF0E1E40);
 
-    // Lista con la configuración de cada botón
+    // Colores dinámicos para el texto
+    final Color titleColor = isDarkMode
+        ? Colors.white
+        : const Color(0xFF0E1E40);
+    final Color subtitleColor = isDarkMode
+        ? Colors.white70
+        : const Color(0xFF6C7A9C);
+
     final List<Map<String, dynamic>> menuItems = [
       {
         'title': 'VENTAS',
@@ -49,7 +59,8 @@ class PlattoMenuPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      // Usamos el color de fondo definido en el Tema global
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
@@ -67,29 +78,29 @@ class PlattoMenuPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(
-                      Icons.restaurant, // Ícono de cubiertos
+                      Icons.restaurant,
                       color: Colors.white,
                       size: 28,
                     ),
                   ),
                   const SizedBox(width: 16),
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'PLATTO',
                         style: TextStyle(
-                          color: darkBlueText,
+                          color: titleColor, // Color dinámico
                           fontSize: 26,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.5,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         'Control total del sabor',
                         style: TextStyle(
-                          color: Color(0xFF6C7A9C),
+                          color: subtitleColor, // Color dinámico
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
@@ -100,23 +111,22 @@ class PlattoMenuPage extends StatelessWidget {
               ),
               const SizedBox(height: 35),
 
-              // --- CUADRÍCULA DE BOTONES (GRID) ---
+              // --- CUADRÍCULA DE BOTONES ---
               Expanded(
                 child: GridView.count(
-                  crossAxisCount: 2, // Dos columnas
-                  crossAxisSpacing: 16, // Espacio horizontal
-                  mainAxisSpacing: 16, // Espacio vertical
-                  childAspectRatio:
-                      1.0, // Hace que los contenedores sean perfectamente cuadrados
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.0,
                   children: menuItems.map((item) {
                     return InkWell(
                       onTap: () {
-                        // --- AQUÍ ESTÁ TU LÓGICA INTEGRADA ---
+                        // Navegación (sin cambios)
                         if (item['title'] == 'VENTAS') {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const SalesPlatto(),
+                              builder: (context) => SalesPlatto(),
                             ),
                           );
                         } else if (item['title'] == 'INVENTARIO') {
@@ -141,6 +151,13 @@ class PlattoMenuPage extends StatelessWidget {
                               builder: (context) => const ReportsPlatto(),
                             ),
                           );
+                        } else if (item['title'] == 'CONFIGURACIÓN') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SettingsScreen(),
+                            ),
+                          );
                         }
                       },
                       borderRadius: BorderRadius.circular(18),
@@ -150,7 +167,10 @@ class PlattoMenuPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(18),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              // Sombra sutil que se adapta
+                              color: isDarkMode
+                                  ? Colors.black54
+                                  : Colors.black.withValues(alpha: 0.05),
                               blurRadius: 6,
                               offset: const Offset(0, 4),
                             ),
@@ -161,6 +181,12 @@ class PlattoMenuPage extends StatelessWidget {
                           children: [
                             Icon(item['icon'], color: Colors.white, size: 55),
                             const SizedBox(height: 12),
+                            const Text(
+                              // No toco el título porque siempre es blanco sobre fondo naranja
+                              '',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            // Reemplazo la lógica de texto de abajo para asegurar legibilidad
                             Text(
                               item['title'],
                               style: const TextStyle(
@@ -178,27 +204,12 @@ class PlattoMenuPage extends StatelessWidget {
                 ),
               ),
 
-              // --- PIE DE PÁGINA (NOTIFICACIONES) ---
+              // --- PIE DE PÁGINA ---
               Padding(
                 padding: const EdgeInsets.only(top: 15.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.notifications_none_rounded,
-                      color: darkBlueText.withValues(alpha: 0.8),
-                      size: 22,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Notificaciones',
-                      style: TextStyle(
-                        color: darkBlueText,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                  children: [],
                 ),
               ),
             ],
