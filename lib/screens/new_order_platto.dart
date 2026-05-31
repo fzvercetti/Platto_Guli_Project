@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+const Color orangeColor = Color(0xFFE98A5C);
+
 class NewOrderPlatto extends StatefulWidget {
   const NewOrderPlatto({super.key});
 
@@ -105,17 +107,33 @@ class _NewOrderPlattoState extends State<NewOrderPlatto> {
 
             const Spacer(),
 
+            // Asegúrate de que orangeColor esté definido arriba en tu archivo
+            // const Color orangeColor = Color(0xFFE98A5C);
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      orangeColor, // Aquí aplicamos el color naranja
+                  foregroundColor:
+                      Colors.white, // El texto será blanco para que se vea bien
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(
+                      12,
+                    ), // Bordes redondeados para que se vea moderno
+                  ),
+                ),
                 onPressed: () {
-                  // Aquí iría tu lógica de guardado
+                  // Tu lógica para confirmar pedido aquí
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Pedido procesado")),
                   );
                 },
-                child: const Text("Confirmar Pedido"),
+                child: const Text(
+                  "Confirmar Pedido",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
