@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart'; // Asegúrate de tener intl en tu pubspec.yaml
 import 'conciliation_platto.dart';
+import 'cash_flow_platto.dart';
 
 class CashManagementPlatto extends StatefulWidget {
   const CashManagementPlatto({super.key});
@@ -106,12 +107,12 @@ class _CashManagementPlattoState extends State<CashManagementPlatto> {
                 );
               },
             ),
-            _buildActionCard(
-              "Flujo de efectivo",
-              Icons.bar_chart,
-              darkBg,
-              () => print("Consultando flujo..."),
-            ),
+            _buildActionCard("Flujo de efectivo", Icons.bar_chart, darkBg, () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CashFlowPlatto()),
+              );
+            }),
           ],
         ),
       ),
