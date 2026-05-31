@@ -1,6 +1,6 @@
 # platto_app
 
-A new Flutter project.
+Is a Flutter Project of mi Girlfriend Gulia.
 
 ## Getting Started
 
