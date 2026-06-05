@@ -30,9 +30,7 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
 
   Future<void> _fetchDatosReporte() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/reportes/resumen'),
-      );
+      final response = await http.get(Uri.parse('$baseUrl/api/resumen'));
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         setState(() {
