@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../utils/api_config.dart';
+
+import 'package:platto_app/utils/api_config.dart';
 
 class ConciliationPlatto extends StatefulWidget {
   const ConciliationPlatto({super.key});
@@ -10,7 +13,7 @@ class ConciliationPlatto extends StatefulWidget {
 }
 
 class _ConciliationPlattoState extends State<ConciliationPlatto> {
-  final String baseUrl = "http://127.0.0.1:5000";
+  final String baseUrl = ApiConfig.baseUrl;
 
   bool isLoading = true;
   double initialBalance = 0.0;

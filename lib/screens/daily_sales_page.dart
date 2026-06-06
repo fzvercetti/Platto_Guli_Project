@@ -1,6 +1,9 @@
+import '../utils/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:platto_app/utils/api_config.dart';
 
 // Definimos el color aquí también para evitar errores
 const Color orangeColor = Color(0xFFE98A5C);
@@ -28,7 +31,7 @@ class _DailySalesPageState extends State<DailySalesPage> {
   Future<void> _fetchVentasFromAPI() async {
     try {
       final response = await http
-          .get(Uri.parse('http://10.0.2.2:5000/api/ventas_dia'))
+          .get(Uri.parse('${ApiConfig.baseUrl}/api/ventas'))
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {

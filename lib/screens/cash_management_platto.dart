@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'conciliation_platto.dart';
 import 'cash_flow_platto.dart';
+import '../utils/api_config.dart';
 
 class CashManagementPlatto extends StatefulWidget {
   const CashManagementPlatto({super.key});
@@ -13,7 +14,7 @@ class CashManagementPlatto extends StatefulWidget {
 }
 
 class _CashManagementPlattoState extends State<CashManagementPlatto> {
-  final String baseUrl = "http://127.0.0.1:5000";
+  final String baseUrl = ApiConfig.baseUrl;
 
   Future<void> registrarMovimiento(
     String tipo,
@@ -22,7 +23,7 @@ class _CashManagementPlattoState extends State<CashManagementPlatto> {
   ) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/transacciones'),
+        Uri.parse('$baseUrl/api/caja/transacciones'),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "tipo": tipo,

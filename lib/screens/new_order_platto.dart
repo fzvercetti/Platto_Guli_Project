@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -12,13 +13,7 @@ class NewOrderPlatto extends StatefulWidget {
 }
 
 class _NewOrderPlattoState extends State<NewOrderPlatto> {
-  // 1. DATOS ESTÁTICOS (PLAN B) - Cargan instantáneamente
-  List<dynamic> _productos = [
-    {"id": 1, "nombre": "Hamburguesa Clásica", "precio": 120.0},
-    {"id": 2, "nombre": "Papas Fritas", "precio": 50.0},
-    {"id": 3, "nombre": "Refresco", "precio": 30.0},
-  ];
-
+  List<dynamic> _productos = [];
   String? _productoSeleccionado;
   String _metodoPago = 'Efectivo';
   final TextEditingController _cantidadController = TextEditingController();
@@ -26,19 +21,16 @@ class _NewOrderPlattoState extends State<NewOrderPlatto> {
   @override
   void initState() {
     super.initState();
-    // 2. Intentamos conectar a la BD en segundo plano sin bloquear la UI
     _fetchProductosFromAPI();
   }
 
   Future<void> _fetchProductosFromAPI() async {
     try {
-      // Intentamos conectar a Flask. Le damos 5 segundos de espera máximo.
       final response = await http
-          .get(Uri.parse('http://localhost:5000/api/productos'))
+          .get(Uri.parse('${ApiConfig.baseUrl}/api/productos/productos'))
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
-        // Si el servidor responde, actualizamos la lista real
         if (mounted) {
           setState(() {
             _productos = jsonDecode(response.body);
@@ -46,72 +38,64 @@ class _NewOrderPlattoState extends State<NewOrderPlatto> {
         }
       }
     } catch (e) {
-      // Si falla, no hacemos nada. El usuario ya está viendo los datos estáticos.
       debugPrint("No se pudo conectar a la BD: $e");
     }
   }
 
-  // --- AQUÍ ES EXACTAMENTE DONDE DEBES PEGAR LA NUEVA FUNCIÓN ---
   Future<void> _savePedido() async {
-    // 1. Validaciones
     if (_productoSeleccionado == null || _cantidadController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Por favor selecciona un producto y cantidad"),
-        ),
+        const SnackBar(content: Text("Selecciona producto y cantidad")),
       );
       return;
     }
 
-    // 2. Cálculo del total
     final producto = _productos.firstWhere(
       (p) => p['nombre'] == _productoSeleccionado,
     );
-    double precioUnitario = (producto['precio'] as num).toDouble();
+    final int productId = (producto['id'] as num).toInt();
     int cantidad = int.tryParse(_cantidadController.text) ?? 0;
-    double total = precioUnitario * cantidad;
 
-    // 3. Enviar al servidor
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:5000/api/pedidos'),
+        Uri.parse('${ApiConfig.baseUrl}/api/pedido/pedido'),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
-          "producto": _productoSeleccionado,
+          "producto_id": productId,
           "cantidad": cantidad,
-          "metodo": _metodoPago,
-          "total": total,
+          "metodo_pago": _metodoPago,
         }),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201 || response.statusCode == 200) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Pedido guardado")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("¡Pedido guardado con éxito!")),
+        );
         Navigator.pop(context);
+      } else {
+        throw Exception("Error del servidor: ${response.statusCode}");
       }
     } catch (e) {
       debugPrint("Error al guardar: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Nuevo Pedido"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      appBar: AppBar(title: const Text("Nuevo Pedido")),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Selecciona el producto:"),
+            const Text("Producto:"),
             DropdownButtonFormField<String>(
               isExpanded: true,
               decoration: const InputDecoration(border: OutlineInputBorder()),
@@ -126,18 +110,13 @@ class _NewOrderPlattoState extends State<NewOrderPlatto> {
               onChanged: (val) => setState(() => _productoSeleccionado = val),
             ),
             const SizedBox(height: 20),
-
             const Text("Cantidad:"),
             TextField(
               controller: _cantidadController,
-              decoration: const InputDecoration(
-                hintText: "Ej. 2",
-                border: OutlineInputBorder(),
-              ),
+              decoration: const InputDecoration(border: OutlineInputBorder()),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 20),
-
             const Text("Método de Pago:"),
             DropdownButtonFormField<String>(
               value: _metodoPago,
@@ -148,32 +127,20 @@ class _NewOrderPlattoState extends State<NewOrderPlatto> {
               ].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
               onChanged: (val) => setState(() => _metodoPago = val!),
             ),
-
             const Spacer(),
-
-            // Asegúrate de que orangeColor esté definido arriba en tu archivo
-            // const Color orangeColor = Color(0xFFE98A5C);
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      orangeColor, // Aquí aplicamos el color naranja
-                  foregroundColor:
-                      Colors.white, // El texto será blanco para que se vea bien
+                  backgroundColor: orangeColor,
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      12,
-                    ), // Bordes redondeados para que se vea moderno
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () {
-                  // Tu lógica para confirmar pedido aquí
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Pedido procesado")),
-                  );
-                },
+                onPressed:
+                    _savePedido, // <--- Aquí ya está conectada la función
                 child: const Text(
                   "Confirmar Pedido",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),

@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:platto_app/utils/api_config.dart';
+import '../utils/api_config.dart';
 
 class InventoryPlatto extends StatelessWidget {
   const InventoryPlatto({super.key});
 
-  final String apiUrl = "http://127.0.0.1:5000/api/inventario";
+  final String apiUrl = "${ApiConfig.baseUrl}/api/productos/inventario";
 
   Future<List<dynamic>> fetchInventory() async {
     final response = await http.get(Uri.parse(apiUrl));

@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:open_filex/open_filex.dart';
+import '../utils/api_config.dart';
 
 class CashFlowPlatto extends StatefulWidget {
   const CashFlowPlatto({super.key});
@@ -15,7 +16,7 @@ class CashFlowPlatto extends StatefulWidget {
 }
 
 class _CashFlowPlattoState extends State<CashFlowPlatto> {
-  final String baseUrl = "http://10.0.2.2:5000";
+  final String baseUrl = ApiConfig.baseUrl;
   bool isLoading = true;
   double netBalance = 0.0;
   double totalIncome = 0.0;

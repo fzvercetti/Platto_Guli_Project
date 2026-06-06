@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:platto_app/utils/api_config.dart';
+import '../utils/api_config.dart';
 
 class ReportsPlatto extends StatefulWidget {
   const ReportsPlatto({super.key});
@@ -10,7 +12,7 @@ class ReportsPlatto extends StatefulWidget {
 }
 
 class _ReportsPlattoState extends State<ReportsPlatto> {
-  final String baseUrl = "http://127.0.0.1:5000";
+  final String baseUrl = ApiConfig.baseUrl;
   final Color brandOrange = const Color(0xFFDE7E51);
   final Color positiveGreen = const Color(0xFF2E7D32);
 
@@ -30,7 +32,9 @@ class _ReportsPlattoState extends State<ReportsPlatto> {
 
   Future<void> _fetchDatosReporte() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/api/resumen'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/resumen/resumen'),
+      );
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         setState(() {
