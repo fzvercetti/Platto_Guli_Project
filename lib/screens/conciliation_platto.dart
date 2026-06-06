@@ -13,7 +13,11 @@ class ConciliationPlatto extends StatefulWidget {
 }
 
 class _ConciliationPlattoState extends State<ConciliationPlatto> {
+<<<<<<< HEAD
   final String baseUrl = ApiConfig.baseUrl;
+=======
+  final String baseUrl = "http://127.0.0.1:5000/api/caja_movimiento";
+>>>>>>> c09d00064163c8a51069397f84a6175097086b63
 
   bool isLoading = true;
   double initialBalance = 0.0;
