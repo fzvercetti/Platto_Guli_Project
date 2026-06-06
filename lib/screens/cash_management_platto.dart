@@ -22,7 +22,7 @@ class _CashManagementPlattoState extends State<CashManagementPlatto> {
   ) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/movimiento'),
+        Uri.parse('$baseUrl/api/transacciones'),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "tipo": tipo,

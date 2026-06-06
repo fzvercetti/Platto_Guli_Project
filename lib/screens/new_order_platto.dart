@@ -51,6 +51,51 @@ class _NewOrderPlattoState extends State<NewOrderPlatto> {
     }
   }
 
+  // --- AQUÍ ES EXACTAMENTE DONDE DEBES PEGAR LA NUEVA FUNCIÓN ---
+  Future<void> _savePedido() async {
+    // 1. Validaciones
+    if (_productoSeleccionado == null || _cantidadController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Por favor selecciona un producto y cantidad"),
+        ),
+      );
+      return;
+    }
+
+    // 2. Cálculo del total
+    final producto = _productos.firstWhere(
+      (p) => p['nombre'] == _productoSeleccionado,
+    );
+    double precioUnitario = (producto['precio'] as num).toDouble();
+    int cantidad = int.tryParse(_cantidadController.text) ?? 0;
+    double total = precioUnitario * cantidad;
+
+    // 3. Enviar al servidor
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:5000/api/pedidos'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "producto": _productoSeleccionado,
+          "cantidad": cantidad,
+          "metodo": _metodoPago,
+          "total": total,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Pedido guardado")));
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      debugPrint("Error al guardar: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
