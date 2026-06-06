@@ -3,8 +3,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../utils/api_config.dart';
 
-import 'package:platto_app/utils/api_config.dart';
-
 class ConciliationPlatto extends StatefulWidget {
   const ConciliationPlatto({super.key});
 

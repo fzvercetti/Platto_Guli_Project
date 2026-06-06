@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:platto_app/utils/api_config.dart';
-import '../utils/api_config.dart';
 
 class InventoryPlatto extends StatelessWidget {
   const InventoryPlatto({super.key});
