@@ -13,6 +13,9 @@ def create_app():
     from app.controllers.reportes_controller import reportes_bp
     from app.controllers.conciliation_controller import conciliacion_bp
     from app.controllers.cashflow_controller import cashflow_bp
+    from app.controllers.daily_sales_controller import daily_sales_bp
+    from app.controllers.orders_controller import orders_bp
+
     
     # Los registramos en la app central
     app.register_blueprint(pedido_bp)
@@ -21,5 +24,7 @@ def create_app():
     app.register_blueprint(reportes_bp, url_prefix='/api/reportes')
     app.register_blueprint(conciliacion_bp, url_prefix='/api/cash')
     app.register_blueprint(cashflow_bp, url_prefix='/api/')
+    app.register_blueprint(daily_sales_bp, url_prefix='/api/')
+    app.register_blueprint(orders_bp, url_prefix='/api')
 
     return app
