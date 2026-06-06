@@ -15,7 +15,7 @@ class CashFlowPlatto extends StatefulWidget {
 }
 
 class _CashFlowPlattoState extends State<CashFlowPlatto> {
-  final String baseUrl = "http://10.0.2.2:5000";
+  final String baseUrl = "http://127.0.0.1:5000/api/ventas";
   bool isLoading = true;
   double netBalance = 0.0;
   double totalIncome = 0.0;

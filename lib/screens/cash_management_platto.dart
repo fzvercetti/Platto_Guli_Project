@@ -13,7 +13,7 @@ class CashManagementPlatto extends StatefulWidget {
 }
 
 class _CashManagementPlattoState extends State<CashManagementPlatto> {
-  final String baseUrl = "http://127.0.0.1:5000";
+  final String baseUrl = "http://127.0.0.1:5000/api/caja_movimiento";
 
   Future<void> registrarMovimiento(
     String tipo,
