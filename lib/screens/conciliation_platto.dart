@@ -75,7 +75,46 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
   }
 
   Future<void> _saveConciliation() async {
-    // Lógica sin cambios...
+    // 1. Preparamos el objeto con los datos
+    final body = {
+      "expected_balance": expectedBalance,
+      "physical_cash": double.tryParse(cashController.text) ?? 0.0,
+      "physical_cards": double.tryParse(cardsController.text) ?? 0.0,
+      "difference": currentDifference,
+    };
+
+    try {
+      print("Enviando a: $baseUrl/api/cash/guardar_cierre");
+      print("Cuerpo: $body");
+
+      // 2. Hacemos la petición POST
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/cash/guardar_cierre'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(body),
+      );
+
+      // 3. Verificamos la respuesta
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Cierre guardado exitosamente"), backgroundColor: Colors.green),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error del servidor: ${response.body}")),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("No se pudo conectar al servidor: $e")),
+        );
+      }
+    }
   }
 
   @override

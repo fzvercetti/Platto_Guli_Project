@@ -3,11 +3,11 @@ import mysql.connector
 from mysql.connector import pooling
 
 db_config = {
-    "host": "127.0.0.1",
+    "host": "localhost",
     "port": 3307,
     "user": "root",
-    "password": "zamora",
-    "database": "platto_db"
+    "password": "root",
+    "database": "platto2_db"
 }
 
 try:

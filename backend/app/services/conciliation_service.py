@@ -42,35 +42,50 @@ class ConciliationService:
                 cursor.close()
             conexion.close()
 
-        @staticmethod
-        def guardar_cierre(data):
-            conexion = get_db_connection()
-            if not conexion:
-                return {"error": "Error de conexión"}, 500
+    @staticmethod
+    def guardar_cierre(data):
+        print("--- debug: funcion guardar_cierre llamada ---")
+        print("datos recibidos desde flutter:", data)
+        conexion = get_db_connection()
+        if not conexion:
+            return {"error": "Error de conexión"}, 500
             
         try:
             cursor = conexion.cursor()
+            
+            # Ajustamos la consulta para que incluya tus columnas exactas.
+            # 'NOW()' insertará automáticamente la fecha y hora actual.
             query = """
                 INSERT INTO cierres_caja 
                 (total_sistema_efectivo, total_fisico_efectivo, 
                  total_sistema_tarjeta, total_fisico_tarjeta, diferencia)
                 VALUES (%s, %s, %s, %s, %s)
             """
+            
+            # Asumiendo que el 'expected_balance' del sistema es todo efectivo
+            # Puedes ajustar si el sistema distingue efectivo/tarjeta
             valores = (
-                data['sistema_efectivo'], data['fisico_efectivo'],
-                data['sistema_tarjeta'], data['fisico_tarjeta'], 
-                data['diferencia']
+                data.get('expected_balance', 0),  # total_sistema_efectivo
+                data.get('physical_cash', 0),     # total_fisico_efectivo
+                0.0,                              # total_sistema_tarjeta (Asumido 0 si no llega)
+                data.get('physical_cards', 0),    # total_fisico_tarjeta
+                data.get('difference', 0)         # diferencia
             )
             
+            print(f"DEBUG: Ejecutando Query con valores: {valores}")
             cursor.execute(query, valores)
             conexion.commit()
+            print("DEBUG: Commit realizado con éxito")
+
             return {"mensaje": "Cierre guardado exitosamente"}, 200
             
         except Exception as e:
+            print(f"DEBUG CRÍTICO: Error en SQL: {str(e)}")
+            # Imprime el error en consola para que sepas qué pasó exactamente
+            print(f"Error al guardar cierre: {e}")
             return {"error": str(e)}, 500
         finally:
             if 'cursor' in locals():
                 cursor.close()
             conexion.close()
-
-            
+            print("--- DEBUG: Cierre de conexión ---")

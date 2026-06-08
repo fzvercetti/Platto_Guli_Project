@@ -7,6 +7,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:open_filex/open_filex.dart';
 import '../utils/api_config.dart';
+import 'package:printing/printing.dart';
 
 class CashFlowPlatto extends StatefulWidget {
   const CashFlowPlatto({super.key});
@@ -242,19 +243,15 @@ class _CashFlowPlattoState extends State<CashFlowPlatto> {
     );
 
     try {
-      final directory = await getApplicationDocumentsDirectory();
-      final String path =
-          "${directory.path}/Reporte_Platto_${DateTime.now().millisecondsSinceEpoch}.pdf";
-      final file = File(path);
-      await file.writeAsBytes(await pdf.save());
-
-      final result = await OpenFilex.open(path);
-      if (result.type != ResultType.done) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("PDF guardado correctamente")),
-        );
-      }
+     await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name:'Reporte_Caja_Platto',
+    );
+    
+     if (!mounted) return;
+     ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("PDF Generado Correctamente")),
+    );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
