@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from app.services.conciliation_service import ConciliationService
 
 conciliacion_bp = Blueprint('conciliacion', __name__)
