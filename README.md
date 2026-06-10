@@ -14,7 +14,7 @@ Un sistema integral diseñado para optimizar el flujo de pedidos, la administrac
 ##  Stack Tecnológico
 
 * **Frontend:** Flutter / Dart
-* **Backend:** Python
+* **Backend:** Python  / Flask
 * **Base de Datos:** MySQL
 
 ##  Estructura del Proyecto
