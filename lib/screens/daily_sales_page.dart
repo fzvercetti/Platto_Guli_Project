@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:platto_app/utils/api_config.dart';
-
 // Definimos el color aquí también para evitar errores
 const Color orangeColor = Color(0xFFE98A5C);
 

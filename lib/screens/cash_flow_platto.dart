@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:open_filex/open_filex.dart';
 import '../utils/api_config.dart';
 import 'package:printing/printing.dart';
 
@@ -243,15 +240,15 @@ class _CashFlowPlattoState extends State<CashFlowPlatto> {
     );
 
     try {
-     await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
-      name:'Reporte_Caja_Platto',
-    );
-    
-     if (!mounted) return;
-     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("PDF Generado Correctamente")),
-    );
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+        name: 'Reporte_Caja_Platto',
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("PDF Generado Correctamente")),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:platto_app/utils/api_config.dart';
-import '../utils/api_config.dart';
 
 class InventoryPlatto extends StatelessWidget {
   const InventoryPlatto({super.key});
@@ -57,7 +56,7 @@ class InventoryPlatto extends StatelessWidget {
                 const SizedBox(width: 10),
                 _statusCard(
                   context,
-                  "Low",
+                  "Bajo",
                   Icons.warning_amber,
                   Colors.grey,
                   false,
@@ -75,7 +74,7 @@ class InventoryPlatto extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    "Product",
+                    "Productos",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: textStyle.bodyMedium?.color,
@@ -84,7 +83,7 @@ class InventoryPlatto extends StatelessWidget {
                 ),
                 Expanded(
                   child: Text(
-                    "Cat.",
+                    "Categoria.",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: textStyle.bodyMedium?.color,
@@ -102,7 +101,7 @@ class InventoryPlatto extends StatelessWidget {
                 ),
                 Expanded(
                   child: Text(
-                    "Price",
+                    "Precio",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: textStyle.bodyMedium?.color,

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../utils/api_config.dart';
-
-import 'package:platto_app/utils/api_config.dart';
+import 'admin_selector.dart';
 
 class ConciliationPlatto extends StatefulWidget {
   const ConciliationPlatto({super.key});
@@ -100,7 +99,14 @@ class _ConciliationPlattoState extends State<ConciliationPlatto> {
       if (response.statusCode == 200) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Cierre guardado exitosamente"), backgroundColor: Colors.green),
+            const SnackBar(
+              content: Text("Cierre guardado exitosamente"),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminSelector()),
           );
         }
       } else {

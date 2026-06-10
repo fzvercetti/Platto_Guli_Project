@@ -4,6 +4,7 @@ import 'inventory_platto.dart';
 import 'cash_management_platto.dart';
 import 'reports_platto.dart';
 import 'settings_screen.dart';
+import 'admin_selector.dart';
 
 class PlattoMenuPage extends StatelessWidget {
   const PlattoMenuPage({super.key});
@@ -47,7 +48,7 @@ class PlattoMenuPage extends StatelessWidget {
         'color': orangeColor,
       },
       {
-        'title': 'USUARIOS',
+        'title': 'ADMINISTRADORES',
         'icon': Icons.people_alt_outlined,
         'color': slateColor,
       },
@@ -149,6 +150,13 @@ class PlattoMenuPage extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (context) => const ReportsPlatto(),
+                            ),
+                          );
+                        } else if (item['title'] == 'ADMINISTRADORES') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AdminSelector(),
                             ),
                           );
                         } else if (item['title'] == 'CONFIGURACIÓN') {
