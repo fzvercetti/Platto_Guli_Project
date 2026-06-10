@@ -6,8 +6,8 @@ db_config = {
     "host": "localhost",
     "port": 3307,
     "user": "root",
-    "password": "root",
-    "database": "platto2_db"
+    "password": "zamora",
+    "database": "platto_db"
 }
 
 try:
